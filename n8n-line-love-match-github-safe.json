@@ -1,0 +1,876 @@
+{
+  "name": "LINE AI 愛情與學習夥伴配對｜公開展示範本",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "cef73cae-bc51-4fb7-9a4a-bea7b0de003c",
+      "name": "1. 點擊開始配對",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-demo-1",
+              "name": "nameA",
+              "value": "阿澤",
+              "type": "string"
+            },
+            {
+              "id": "set-demo-2",
+              "name": "ageA",
+              "value": 21,
+              "type": "number"
+            },
+            {
+              "id": "set-demo-3",
+              "name": "cityA",
+              "value": "新竹",
+              "type": "string"
+            },
+            {
+              "id": "set-demo-4",
+              "name": "interestsA",
+              "value": "拉麵,攝影,電影",
+              "type": "string"
+            },
+            {
+              "id": "set-demo-5",
+              "name": "nameB",
+              "value": "小雨",
+              "type": "string"
+            },
+            {
+              "id": "set-demo-6",
+              "name": "ageB",
+              "value": 22,
+              "type": "number"
+            },
+            {
+              "id": "set-demo-7",
+              "name": "cityB",
+              "value": "新竹",
+              "type": "string"
+            },
+            {
+              "id": "set-demo-8",
+              "name": "interestsB",
+              "value": "攝影,咖啡,拉麵",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1ce0fbe4-da18-4db2-a56d-715d7fae20ea",
+      "name": "2. 輸入兩人的資料",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst split = (text) => [...new Set(String(text || '').split(/[,，、]/).map(x => x.trim().toLowerCase()).filter(Boolean))];\nconst a = split(data.interestsA), b = split(data.interestsB);\nconst shared = a.filter(x => b.includes(x));\nconst union = new Set([...a, ...b]).size;\nconst sharedScore = union ? 70 * shared.length / union : 0;\nconst cityBonus = data.cityA === data.cityB ? 15 : 0;\nconst ageGap = Math.abs(Number(data.ageA) - Number(data.ageB));\nconst ageBonus = 15 * (1 - Math.min(ageGap, 10) / 10);\nconst score = Math.round(Math.min(100, sharedScore + cityBonus + ageBonus));\nconst result = score >= 60 ? 'YES' : 'NO';\nreturn [{ json: { ...data, sharedInterests: shared, ageGap, score, result, explanation: '分數只根據共同興趣、城市與年齡差計算，並非真正的戀愛成功率。' } }];"
+      },
+      "id": "17148e5b-b3b5-4a05-9706-2df01e97f634",
+      "name": "3. 計算共同興趣與分數",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.result }}",
+                    "rightValue": "YES",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "YES"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.result }}",
+                    "rightValue": "NO",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "NO"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "none"
+        }
+      },
+      "id": "d146c5d1-a080-420e-9c41-4c1e7d5d9bcc",
+      "name": "4. Switch 判斷 YES / NO",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        832,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "message_yes",
+              "name": "message",
+              "value": "={{ '❤️ ' + $json.nameA + ' 和 ' + $json.nameB + ' 的共同點分數：' + $json.score + '/100！共同興趣：' + $json.sharedInterests.join('、') + '。可以從共同興趣開啟話題。' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a33fe459-2125-4834-a6db-6494e61e9996",
+      "name": "5A. 有緣！推薦認識",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "message_no",
+              "name": "message",
+              "value": "={{ '💬 ' + $json.nameA + ' 和 ' + $json.nameB + ' 的共同點分數：' + $json.score + '/100。現階段共同興趣較少，可以先聊聊彼此生活，慢慢認識。' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2c72909f-1532-47a7-8f21-baff15070d63",
+      "name": "5B. 再多聊聊看",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 💘 n8n 初體驗：興趣配對小助手\n**執行方式**：匯入 JSON 後點 Execute Workflow，直接看到流程從綠色線條通過 Switch YES/NO。\n\n1. **Manual Trigger**：按一下手動開始\n2. **Edit Fields**：預先放兩位虛構人物資料，可自行修改\n3. **Code**：計算共同興趣、城市及年齡差\n4. **Switch**：依分數判斷 YES 或 NO\n5. **Edit Fields**：產生不同結果訊息\n\n✅ **免 API Key／免串 LINE／免登入 Gmail。**\n\n⚠️ 這只是課堂示範的「共同點分數」，不能當作真實戀愛成功率，也不會替真人自動取得聯絡方式。",
+        "height": 280,
+        "width": 500,
+        "color": 5
+      },
+      "id": "f5581126-f3fd-4693-8b00-f9ff5f073138",
+      "name": "作品說明",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "line-love-match-github-demo",
+        "options": {}
+      },
+      "id": "19beef30-aabf-4bb9-91d2-04efa2700d76",
+      "name": "LINE Webhook 收訊",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        64,
+        832
+      ],
+      "webhookId": "5d4901b4-d978-4352-ad6a-f070dfc91b5c"
+    },
+    {
+      "parameters": {
+        "jsCode": "const payload = $input.first().json;\nconst events = (payload.body || payload).events || [];\nconst event = events.find(e => e.type === 'message' && e.message?.type === 'text');\nif (!event || !event.replyToken || !event.source?.userId) return [];\n\nconst text = String(event.message.text || '').trim();\nconst basic = { lineUserId: event.source.userId, replyToken: event.replyToken };\nconst help = '💘 我是阿澤戀愛配對精靈！\\n報名請傳：\\n同意報名|暱稱|年齡|城市|興趣1,興趣2\\n\\n範例：同意報名|阿澤|21|新竹|拉麵,攝影,電影\\n\\n報名後傳「開始配對」就能找共同興趣的學員。限18歲以上，請勿填電話、住址或真實姓名。';\n\nif (text === '開始配對') return [{ json: { ...basic, action: 'match' } }];\nif (/^破冰[|｜]/.test(text)) {\n  const topic = text.split(/[|｜]/).slice(1).join(' ').trim().slice(0, 200);\n  if (!topic) return [{ json: { ...basic, action: 'help', responseText: help } }];\n  return [{ json: { ...basic, action: 'ai', prompt: '請用繁體中文，根據這個聊天情境給一句自然、不油膩的交友破冰開場白及簡短理由，80字內：' + topic } }];\n}\nconst pieces = text.split(/[|｜]/).map(v => v.trim());\nif (pieces[0] === '同意報名') {\n  const age = Number(pieces[2]);\n  const okay = pieces.length === 5 && pieces[1]?.length > 0 && pieces[1].length <= 20 &&\n    Number.isInteger(age) && age >= 18 && age <= 120 && pieces[3]?.length > 0 &&\n    pieces[3].length <= 20 && pieces[4]?.length > 0 && pieces[4].length <= 100;\n  if (!okay) return [{ json: { ...basic, action: 'help', responseText: '報名格式有誤，或年齡未滿18歲。\\n\\n' + help } }];\n  return [{ json: {\n    ...basic, action: 'register', nickname: pieces[1], age,\n    city: pieces[3], interests: pieces[4], optIn: true,\n  } }];\n}\nreturn [{ json: { ...basic, action: 'help', responseText: help } }];"
+      },
+      "id": "a80111c6-12e4-4119-b78c-133aa6ef3c06",
+      "name": "LINE 解析指令",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5b70b97f-d577-4837-b0f4-202bd5f4859d",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "register",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "報名"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "aca0f98a-b24b-4bcc-9836-d9fbdc8789b2",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "match",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "配對"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e0d9fc18-ddd4-4d63-83bd-a3df86956627",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "help",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "說明"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e80a22ab-c4a9-46b9-9921-621fe6def3c3",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "ai",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "AI破冰"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f50345d3-83dc-4232-a252-a36ea0db87c9",
+      "name": "判斷 報名／配對／說明",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        592,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lineUserId",
+              "keyValue": "={{ $json.lineUserId }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lineUserId": "={{ $json.lineUserId }}",
+            "nickname": "={{ $json.nickname }}",
+            "age": "={{ $json.age }}",
+            "city": "={{ $json.city }}",
+            "interests": "={{ $json.interests }}",
+            "optIn": "={{ $json.optIn }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "lineUserId",
+              "displayName": "lineUserId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "nickname",
+              "displayName": "nickname",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "age",
+              "displayName": "age",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "interests",
+              "displayName": "interests",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "optIn",
+              "displayName": "optIn",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "273ea47d-eda9-404b-b9b3-a01fc28ad214",
+      "name": "資料表 新增或更新報名",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cff33768-8127-4bda-9c61-ac71f2da4fcb",
+              "name": "responseText",
+              "value": "={{ '✅ 報名完成，' + $('LINE 解析指令').first().json.nickname + '！\\n現在傳「開始配對」，我就會幫你找相似興趣的學員 💘' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b111b46a-e2c0-49c7-8e96-61ea50bd4edd",
+      "name": "回覆 報名完成",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1184,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "returnAll": true
+      },
+      "id": "18a650c9-d0b3-45ee-b769-5b085aef6553",
+      "name": "資料表 讀取所有報名者",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        880
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const requester = $('LINE 解析指令').first().json;\nconst rows = $input.all().map(i => i.json).filter(row => row && row.lineUserId);\nconst agreed = value => value === true || value === 1 || String(value).toLowerCase() === 'true';\nconst me = rows.find(p => p.lineUserId === requester.lineUserId && agreed(p.optIn));\nif (!me) {\n  return [{ json: { canMatch: false, responseText: '你還沒完成報名喔！\\n請傳：同意報名|暱稱|年齡|城市|興趣1,興趣2' } }];\n}\nconst split = (value) => [...new Set(String(value || '').split(/[,，、]/).map(s => s.trim().toLowerCase()).filter(Boolean))];\nconst a = split(me.interests);\nconst candidates = rows.filter(p => p.lineUserId !== me.lineUserId && agreed(p.optIn) && Number(p.age) >= 18);\nif (!candidates.length) {\n  return [{ json: { canMatch: false, responseText: '目前還沒有其他完成報名的學員，先邀請朋友加入吧 💘' } }];\n}\nconst scored = candidates.map(other => {\n  const b = split(other.interests);\n  const shared = a.filter(s => b.includes(s));\n  const union = new Set([...a, ...b]).size;\n  const sharedScore = union ? 70 * shared.length / union : 0;\n  const cityBonus = String(me.city).trim() === String(other.city).trim() ? 15 : 0;\n  const ageGap = Math.abs(Number(me.age) - Number(other.age));\n  const ageBonus = 15 * (1 - Math.min(ageGap, 10) / 10);\n  const score = Math.round(Math.min(100, sharedScore + cityBonus + ageBonus));\n  return { other, shared, ageGap, score };\n}).sort((x, y) => y.score - x.score);\nconst best = scored[0];\nif (best.score < 60) {\n  return [{ json: { canMatch: false, responseText: '目前還沒有達到60分的興趣配對對象，等等再來看看！\\n這個分數只代表興趣、城市與年齡相似度，不是戀愛成功率。' } }];\n}\nconst prompt = [\n  '用自然、親切、簡短的繁體中文介紹以下興趣配對。不要誇大成戀愛成功率，也不要表示雙方已經認識。',\n  '配對方式：共同興趣 70 分、同城市 15 分、年齡接近 15 分；60 分以上推薦。',\n  '只介紹暱稱與公開報名的興趣，不提供 LINE ID、聯絡方式或精確個資。',\n  '發問者暱稱：' + String(me.nickname),\n  '候選人暱稱：' + String(best.other.nickname),\n  '共同興趣：' + (best.shared.join('、') || '尚無'),\n  '城市是否相同：' + (me.city === best.other.city ? '是' : '否'),\n  '年齡差：' + best.ageGap,\n  '相似度分數：' + best.score,\n  '最後用一句話建議怎麼破冰，回覆在150字以內。',\n].join('\\n');\nreturn [{ json: { canMatch: true, prompt, score: best.score } }];"
+      },
+      "id": "ae7f83bb-916e-444d-a11a-720cd0849282",
+      "name": "沿用原本分數演算法",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "73ad0ee7-a922-4d98-949e-307e2dd6d094",
+              "leftValue": "={{ $json.canMatch }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "265ec1ac-9aa8-4a77-aff5-4ae029421e5c",
+      "name": "是否有合適對象",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1424,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8e168d75-42aa-4cd8-a394-b3832646a09a",
+              "name": "responseText",
+              "value": "={{ (Array.isArray($json.output) ? $json.output.flatMap(item => item.content || []).find(item => item.type === 'output_text')?.text : null) || $json.output_text || $json.choices?.[0]?.message?.content || 'AI 暫時無法回答，請稍後再試。' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0123a9b6-3c86-4d65-88d5-4cbbd65da311",
+      "name": "取出 AI 回覆",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1968,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "605b2707-5a4e-4f90-9fac-263fa9930f2c",
+              "name": "responseText",
+              "value": "={{ $json.responseText }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3e61b305-10ea-4280-ac89-9ea4a7c6920a",
+      "name": "回覆 尚無配對",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1696,
+        1024
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/reply",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({replyToken:$('LINE 解析指令').first().json.replyToken,messages:[{type:'text',text:String($json.responseText || '目前無法取得回覆').slice(0,4500)}]}) }}",
+        "options": {}
+      },
+      "id": "1c6b2963-77fc-4391-a0dc-7110e647bd19",
+      "name": "LINE Reply 回傳手機",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2272,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 💘 GitHub 公開展示版｜使用前設定\n這是可匯入的教學範本，已移除原本的憑證參照、資料表 ID、執行環境 ID 和個人化 Webhook 識別。**未完成線上 LINE 實測，請勿宣稱已正式上線。**\n\n1. 在 n8n 建立 Data Table（例如 `nuva_match_profiles`）：`lineUserId` (string)、`nickname` (string)、`age` (number)、`city` (string)、`interests` (string)、`optIn` (boolean)。\n2. 在兩個「資料表」節點重新選取你自己建立的表。\n3. 在 `Message a model` 設定自己的 OpenAI Credential。\n4. 在 `LINE Reply 回傳手機` 設定 HTTP Header Auth：名稱 `Authorization`，值 `Bearer <你的 LINE Channel Access Token>`。請只存入 n8n Credential，絕不可寫在工作流程、GitHub 或截圖中。\n5. 發布並啟用流程後，將 LINE Developers Webhook URL 更新為你這份流程顯示的 Production URL。\n6. 測試：`同意報名|阿澤|21|新竹|拉麵,攝影,電影`，由第二個 LINE 帳號報名，再傳 `開始配對`。\n7. 查看 `取出 AI 回覆` 的輸入資料格式；此範本已支援常見 Responses / Chat Completions 欄位，但應依實際回傳驗證。\n8. 目前沒有驗證 LINE `X-Line-Signature`、刪除資料機制及完整隱私告知；公開招募真人前務必補齊。\n9. 配對分數僅表示共同興趣、城市與年齡接近程度，**不是戀愛成功率**。",
+        "height": 450,
+        "width": 700,
+        "color": 4
+      },
+      "id": "bd7f5328-b95a-4d8e-af21-de737287d496",
+      "name": "使用前必看",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "={{ $json.prompt}}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        2048,
+        1104
+      ],
+      "id": "9e4ad157-7a4b-4257-b554-8c56563ea043",
+      "name": "Message a model"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "1. 點擊開始配對": {
+      "main": [
+        [
+          {
+            "node": "2. 輸入兩人的資料",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. 輸入兩人的資料": {
+      "main": [
+        [
+          {
+            "node": "3. 計算共同興趣與分數",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. 計算共同興趣與分數": {
+      "main": [
+        [
+          {
+            "node": "4. Switch 判斷 YES / NO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. Switch 判斷 YES / NO": {
+      "main": [
+        [
+          {
+            "node": "5A. 有緣！推薦認識",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "5B. 再多聊聊看",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LINE Webhook 收訊": {
+      "main": [
+        [
+          {
+            "node": "LINE 解析指令",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LINE 解析指令": {
+      "main": [
+        [
+          {
+            "node": "判斷 報名／配對／說明",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判斷 報名／配對／說明": {
+      "main": [
+        [
+          {
+            "node": "資料表 新增或更新報名",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "資料表 讀取所有報名者",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LINE Reply 回傳手機",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "資料表 新增或更新報名": {
+      "main": [
+        [
+          {
+            "node": "回覆 報名完成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "回覆 報名完成": {
+      "main": [
+        [
+          {
+            "node": "LINE Reply 回傳手機",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "資料表 讀取所有報名者": {
+      "main": [
+        [
+          {
+            "node": "沿用原本分數演算法",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "沿用原本分數演算法": {
+      "main": [
+        [
+          {
+            "node": "是否有合適對象",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "是否有合適對象": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "回覆 尚無配對",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "取出 AI 回覆": {
+      "main": [
+        [
+          {
+            "node": "LINE Reply 回傳手機",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "回覆 尚無配對": {
+      "main": [
+        [
+          {
+            "node": "LINE Reply 回傳手機",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "取出 AI 回覆",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "tags": []
+}
